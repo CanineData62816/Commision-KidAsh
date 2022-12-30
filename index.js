@@ -68,6 +68,8 @@ client.on('interactionCreate', async (interaction) => {
         let cookie = submit.fields.getTextInputValue('cookie')
         let xsrf = await getToken(cookie)
 
+        let ids = []
+
         for (let i = 0; i < amount; i++) {
             await wait(10 + i)
             const form = new FormData();
@@ -91,6 +93,7 @@ client.on('interactionCreate', async (interaction) => {
             if(res.status !== 200) {console.log(res.status, ' | ', res.statusText, ' | ', await res.json());return submit.editReply(`Roblox is either down or you don't have permission to edit this experience`)}
 
             let gamepassId = (await res.json()).gamePassId
+            ids.push(gamepassId)
             await fetch('https://www.roblox.com/game-pass/update', {
                 method: "POST",
                 body: JSON.stringify({
@@ -104,7 +107,7 @@ client.on('interactionCreate', async (interaction) => {
                 }
             })
         }
-        submit.editReply(`Created ${amount} gamepasses with the name ${name} and price ${price}`)
+        submit.editReply(`Created ${amount} gamepasses with the name ${name} and price ${price}\nGamepass IDS:\`\`\`${ids.join(', ')}`)
     }
 })
 
