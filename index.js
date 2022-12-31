@@ -8,6 +8,7 @@ import AdmZip from "adm-zip";
 
 const wait = (await import('timers/promises')).setTimeout
 
+//Get token function NOT writen by me
 const getToken = async (COOKIE) => {
     let xCsrfToken = "";
 
