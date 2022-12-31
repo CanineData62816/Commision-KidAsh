@@ -130,21 +130,20 @@ client.on('interactionCreate', async (interaction) => {
         let res = await fetch(zipAttachment.attachment)
         res.body.pipe(fs.createWriteStream('./Download/animations.zip')).on('close', async () => {
             try {
+                let animIds = []
+                await noblox.setCookie(cookie)
                 const zip = new AdmZip('./Download/animations.zip')
-                for (const zipEntry of zip.getEntries()) {
-                    if(zipEntry.isDirectory || !zipEntry.name.endsWith('.rbxm')) return submit.editReply('Invalid file types in zip file')
-                }
-                zip.extractAllToAsync('./Download')
+                await Promise.all(zip.getEntries().map(async (zipEntry) => {
+                    if (zipEntry.isDirectory || !zipEntry.name.endsWith('.rbxm')) return submit.editReply('Invalid file types in zip file')
+                    let animId = await noblox.uploadAnimation(zipEntry.getData().toString(), {
+                        name: zipEntry.name.slice(0, -5)
+                    })
+                    animIds.push(`${zipEntry.name.slice(0, -5)}: ${animId}`)
+                }))
+                submit.editReply(`Successfully created ${animIds.length} animations.\nAnimation IDs: \`\`\`${animIds.join(', ')}\`\`\``)
             } catch (err) {
                 console.warn(err)
             }
-            await noblox.setCookie(cookie)
-            fs.readdirSync(`./Downloads/${zip.name.slice(0, -4)}`).forEach(async(fileName) => {
-                await noblox.uploadAnimation(fs.readFileSync(`./Downloads/${zip.name.slice(0, -4)}/${fileName}`), {
-                    name: fileName.slice(0, -5)
-                })
-                fs.rmSync(`./Downloads/Animations/${fileName}`)
-            })
         })
     }
 })
