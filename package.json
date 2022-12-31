@@ -18,6 +18,7 @@
   "description": "",
   "type": "module",
   "dependencies": {
+    "adm-zip": "^0.5.10",
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
     "noblox.js": "^4.13.1",

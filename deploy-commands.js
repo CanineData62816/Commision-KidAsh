@@ -17,6 +17,10 @@ let commands = [
         .addStringOption(option => option.setName('description').setDescription('description'))
         .addAttachmentOption(option => option.setName('image').setDescription('The image for the gamepass'))
         .toJSON(),
+    new SlashCommandBuilder()
+        .setName('animation')
+        .setDescription('Bulk create animations')
+        .addAttachmentOption(option => option.setName('animations').setDescription('description').setRequired(true))
 ]
 
 rest.put(Routes.applicationCommands(clientId), {
