@@ -128,23 +128,40 @@ client.on('interactionCreate', async (interaction) => {
         let zipAttachment = interaction.options.getAttachment('animations', true)
         if (!zipAttachment.name?.endsWith('.zip')) return submit.editReply(`You need to upload a zip file`)
         let res = await fetch(zipAttachment.attachment)
-        res.body.pipe(fs.createWriteStream('./Download/animations.zip')).on('close', async () => {
-            try {
-                let animIds = []
-                await noblox.setCookie(cookie)
-                const zip = new AdmZip('./Download/animations.zip')
-                await Promise.all(zip.getEntries().map(async (zipEntry) => {
-                    if (zipEntry.isDirectory || !zipEntry.name.endsWith('.rbxm')) return submit.editReply('Invalid file types in zip file')
-                    let animId = await noblox.uploadAnimation(zipEntry.getData().toString(), {
-                        name: zipEntry.name.slice(0, -5)
-                    })
-                    animIds.push(`${zipEntry.name.slice(0, -5)}: ${animId}`)
-                }))
-                submit.editReply(`Successfully created ${animIds.length} animations.\nAnimation IDs: \`\`\`${animIds.join(', ')}\`\`\``)
-            } catch (err) {
-                console.warn(err)
-            }
-        })
+        let buffer = await res.arrayBuffer()
+        try {
+            let animIds = []
+            await noblox.setCookie(cookie)
+            const zip = new AdmZip(Buffer.from(buffer))
+            await Promise.all(zip.getEntries().map(async (zipEntry) => {
+                if (zipEntry.isDirectory || !zipEntry.name.endsWith('.rbxm')) return submit.editReply('Invalid file types in zip file')
+                let animId = await noblox.uploadAnimation(zipEntry.getData().toString(), {
+                    name: zipEntry.name.slice(0, -5)
+                })
+                animIds.push(`${zipEntry.name.slice(0, -5)}: ${animId}`)
+            }))
+            submit.editReply(`Successfully created ${animIds.length} animations.\nAnimation IDs: \`\`\`${animIds.join(', ')}\`\`\``)
+        } catch (err) {
+            console.warn(err)
+        }
+    } else if (interaction.commandName === 'allow-audios') {
+        let modal = new ModalBuilder()
+            .setTitle('Coookie')
+            .setCustomId('cookie-modal')
+            .addComponents(
+                new ActionRowBuilder()
+                    .setComponents(new TextInputBuilder().setLabel('Cookie').setPlaceholder('The cookie you want to use for this interaction').setRequired(true).setStyle(TextInputStyle.Paragraph).setCustomId('cookie'))
+            )
+        interaction.showModal(modal)
+        let submit = await interaction.awaitModalSubmit({ time: 10000 * 60 })
+        await submit.deferReply()
+
+        let cookie = submit.fields.getTextInputValue('cookie')
+
+        let groupId = interaction.options.getInteger('group')
+        let universeId = interaction.options.getInteger('universe')
+
+
     }
 })
 
