@@ -169,7 +169,7 @@ client.on('interactionCreate', async (interaction) => {
             let groupId = interaction.options.getInteger('group', true)
             let universeId = interaction.options.getInteger('universe', true)
 
-            let res = await (await fetch(`https://itemconfiguration.roblox.com/v1/creations/get-assets?assetType=Audio&isArchived=false&groupId=${groupId}&limit=25&cursor=`, {
+            let res = await (await fetch(`https://itemconfiguration.roblox.com/v1/creations/get-assets?assetType=Audio&isArchived=false&groupId=${groupId}&limit=100&cursor=`, {
                 headers: {
                     Cookie: `.ROBLOSECURITY=${cookie}`
                 }
@@ -190,6 +190,7 @@ client.on('interactionCreate', async (interaction) => {
                         ]
                     })
                 })
+                
                 if(res.status !== 200) {
                     await wait(60 * 1000)
                     console.log("Ratelimited", ' | ', res.status, ' | ', res.statusText)
