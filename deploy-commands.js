@@ -21,6 +21,18 @@ let commands = [
         .setName('animation')
         .setDescription('Bulk create animations')
         .addAttachmentOption(option => option.setName('animations').setDescription('description').setRequired(true))
+        .toJSON(),
+    new SlashCommandBuilder()
+        .setName('devproducts')
+        .setDescription('Create dev products based off a json file')
+        .addIntegerOption(option => option.setName('universe').setDescription('The universe to create the dev product for').setRequired(true))
+        .addAttachmentOption(option => option.setName('devproducts').setDescription('The file with the dev products to create').setRequired(true))
+        .toJSON(),
+    new SlashCommandBuilder()
+        .setName('allow-audios')
+        .setDescription('Add a universe to the allow list of every audio in a group')
+        .addIntegerOption(option => option.setName('group').setDescription('The group').setRequired(true))
+        .addIntegerOption(option => option.setName('universe').setDescription('The universe').setRequired(true))
 ]
 
 rest.put(Routes.applicationCommands(clientId), {
