@@ -44,7 +44,7 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] })
 
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return
-    
+
     switch (interaction.commandName) {
         case 'animation': {
             let modal = new ModalBuilder()
@@ -186,12 +186,12 @@ client.on('interactionCreate', async (interaction) => {
                     },
                     body: JSON.stringify({
                         "requests": [
-                            {"subjectType": "Universe", "subjectId": universeId, "action": "Use"}
+                            { "subjectType": "Universe", "subjectId": universeId, "action": "Use" }
                         ]
                     })
                 })
-                
-                if(res.status !== 200) {
+
+                if (res.status !== 200) {
                     await wait(60 * 1000)
                     console.log("Ratelimited", ' | ', res.status, ' | ', res.statusText)
                     await sendRequest(id)
@@ -213,7 +213,7 @@ client.on('interactionCreate', async (interaction) => {
                         .setComponents(new TextInputBuilder().setLabel('Cookie').setPlaceholder('The cookie you want to use for this interaction').setRequired(true).setStyle(TextInputStyle.Paragraph).setCustomId('cookie'))
                 )
             interaction.showModal(modal)
-            
+
             let submit = await interaction.awaitModalSubmit({ time: 10000 * 60 })
             await submit.deferReply()
 
@@ -226,6 +226,7 @@ client.on('interactionCreate', async (interaction) => {
             let res = await fetch(attachment.attachment)
             let buffer = Buffer.from(await res.arrayBuffer())
             let devProductsJSON = JSON.parse(buffer.toString())
+            let xsrf = await getToken(cookie)
 
             let devProducts = Object.entries(devProductsJSON)[0][1]
             await noblox.setCookie(cookie)
@@ -234,17 +235,26 @@ client.on('interactionCreate', async (interaction) => {
             await Promise.all(devProducts.map(async (product) => {
                 await (async function createDevProduct() {
                     try {
-                        let id = await noblox.addDeveloperProduct(universeId, product.name, product.price, product.description ?? undefined)
-                        productIds.push(`${id.name}: ${id.productId} | ${id.priceInRobux}`)
+                        let res = await fetch(`https://apis.roblox.com/developer-products/v1/universes/${universeId}/developerproducts?name=${product.name}&description=${product.description ?? ''}&priceInRobux=${product.price}`, {
+                            method: 'POST',
+                            headers: {
+                                "x-csrf-token": xsrf,
+                                Cookie: `.ROBLOSECURITY=${cookie}`,
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        res = await res.json()
+                        if(!res.name) throw new Error('Product with this name already exists')
+                        productIds.push(`${res.name}: ${res.id} | ${product.price}`)
                     } catch (err) {
-                        if(err === 'Error: Product with this name already exists') return await interaction.editReply(`Duplicate product name`)
+                        if (err === 'Error: Product with this name already exists') return await interaction.editReply(`Duplicate product name`)
                         console.log('Ratelimited, waiting one minute before trying again', ' | ', err)
                         await wait(60 * 1000)
                         await createDevProduct()
                     }
                 })()
             }))
-            submit.editReply(`Successfully created ${productIds.length} dev product(s)\nProducts:\`\`\`${productIds.join('; ')}\`\`\``).catch((reason) => {})
+            submit.editReply(`Successfully created ${productIds.length} dev product(s)\nProducts:\`\`\`${productIds.join('; ')}\`\`\``).catch((reason) => { })
             break
         }
     }
